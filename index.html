@@ -1,0 +1,45 @@
+<html>
+<head>
+    <title>Tetris Game JS</title>
+    <style>
+
+        #tetris{
+          size: 0cqb;
+
+        }
+        #score{
+            display: inline-block;
+        }
+        div{
+            font-size: 25px;
+            font-weight: bold;
+            font-family: monospace;
+            text-align: center;
+        }
+        canvas{
+            display: block;
+            margin:0 auto;
+        }
+
+        body{
+            background: rgb(146, 41, 146);
+        }
+
+       
+      
+       
+    </style>
+</head>
+<body>
+    
+    <h2>USE ARROWS</h2>
+   
+    <canvas id="tetris" width="200" height="400"></canvas>
+    <div>
+        <h1>TETRIS</h1>
+        Score : <div id="score">0</div>
+    </div>
+    <script src="tetromino.js"></script>
+    <script src="tetris.js"></script>
+</body>
+</html>
