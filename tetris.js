@@ -5,7 +5,7 @@ const scoreElement = document.getElementById("score");
 const ROW = 20;
 const COL = COLUMN = 10;
 const SQ = squareSize = 20;
-const VACANT = "BLACK"; 
+const VACANT = "BLACK";
 
 const KEY_LEFT = 37;
 const KEY_UP = 38;
@@ -22,14 +22,12 @@ const PIECES = [
     [J, "orange"]
 ];
 
-const DROP_INTERVAL = 1000; 
+const DROP_INTERVAL = 1000;
 
 let board = Array.from({ length: ROW }, () => Array(COL).fill(VACANT));
 let piece = randomPiece();
 let score = 0;
-let isGameOverFlag = false;
-let dropStartTime = Date.now();
-let dropIntervalId;
+let isGameOver = false;
 
 document.addEventListener("keydown", CONTROL);
 
@@ -46,7 +44,6 @@ function CONTROL(event) {
     } else if (event.keyCode === KEY_DOWN) {
         piece.moveDown();
     }
-    
 }
 
 function drawSquare(x, y, color) {
@@ -80,9 +77,9 @@ function Piece(tetromino, color) {
 }
 
 Piece.prototype.fill = function (color) {
-    for (let r = 0; r < this.activeTetromino.length; r++){
-        for (let c = 0; c < this.activeTetromino.length; c++){
-            if (this.activeTetromino[r][c]){
+    for (let r = 0; r < this.activeTetromino.length; r++) {
+        for (let c = 0; c < this.activeTetromino[r].length; c++) {
+            if (this.activeTetromino[r][c]) {
                 drawSquare(this.x + c, this.y + r, color);
             }
         }
@@ -98,7 +95,7 @@ Piece.prototype.unDraw = function () {
 };
 
 Piece.prototype.moveDown = function () {
-    if (!this.collision(0, 1, this.activeTetromino)){
+    if (!this.collision(0, 1, this.activeTetromino)) {
         this.unDraw();
         this.y++;
         this.draw();
@@ -109,7 +106,7 @@ Piece.prototype.moveDown = function () {
 };
 
 Piece.prototype.moveRight = function () {
-    if (!this.collision(1, 0, this.activeTetromino)){
+    if (!this.collision(1, 0, this.activeTetromino)) {
         this.unDraw();
         this.x++;
         this.draw();
@@ -117,7 +114,7 @@ Piece.prototype.moveRight = function () {
 };
 
 Piece.prototype.moveLeft = function () {
-    if (!this.collision(-1, 0, this.activeTetromino)){
+    if (!this.collision(-1, 0, this.activeTetromino)) {
         this.unDraw();
         this.x--;
         this.draw();
@@ -127,16 +124,12 @@ Piece.prototype.moveLeft = function () {
 Piece.prototype.rotate = function () {
     let nextPattern = this.tetromino[(this.tetrominoN + 1) % this.tetromino.length];
     let kick = 0;
-    
-    if (this.collision(0, 0, nextPattern)){
-        if (this.x > COL/2){
-            kick = -1;
-        } else {
-            kick = 1;
-        }
+
+    if (this.collision(0, 0, nextPattern)) {
+        kick = this.x > COL / 2 ? -1 : 1;
     }
-    
-    if (!this.collision(kick, 0, nextPattern)){
+
+    if (!this.collision(kick, 0, nextPattern)) {
         this.unDraw();
         this.x += kick;
         this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length;
@@ -146,53 +139,54 @@ Piece.prototype.rotate = function () {
 };
 
 Piece.prototype.lock = function () {
-    for (let r = 0; r < this.activeTetromino.length; r++){
-        for (let c = 0; c < this.activeTetromino.length; c++){
-            if (!this.activeTetromino[r][c]){
+    for (let r = 0; r < this.activeTetromino.length; r++) {
+        for (let c = 0; c < this.activeTetromino[r].length; c++) {
+            if (!this.activeTetromino[r][c]) {
                 continue;
             }
-            if (this.y + r < 0){
-                alert("Game Over");
-                isGameOverFlag = true;
-                break;
+
+            if (this.y + r < 0) {
+                gameOver();
+                return;
             }
+
             board[this.y + r][this.x + c] = this.color;
         }
     }
-    for (let r = 0; r < ROW; r++){
-        let isRowFull = true;
-        for (let c = 0; c < COL; c++){
-            isRowFull = isRowFull && (board[r][c] !== VACANT);
-        }
-        if (isRowFull){
-            for (let y = r; y > 1; y--){
-                for (let c = 0; c < COL; c++){
-                    board[y][c] = board[y-1][c];
-                }
-            }
-            for (let c = 0; c < COL; c++){
-                board[0][c] = VACANT;
-            }
+
+    for (let r = 0; r < ROW; r++) {
+        let isRowFull = board[r].every(square => square !== VACANT);
+
+        if (isRowFull) {
+            board.splice(r, 1);
+            board.unshift(new Array(COL).fill(VACANT));
             score += 10;
         }
     }
+
+    drawBoard();
+    scoreElement.innerHTML = score;
 };
 
 Piece.prototype.collision = function (x, y, piece) {
-    for (let r = 0; r < piece.length; r++){
-        for (let c = 0; c < piece.length; c++){
-            if (!piece[r][c]){
+    for (let r = 0; r < piece.length; r++) {
+        for (let c = 0; c < piece[r].length; c++) {
+            if (!piece[r][c]) {
                 continue;
             }
+
             let newX = this.x + c + x;
             let newY = this.y + r + y;
-            if (newX < 0 || newX >= COL || newY >= ROW){
+
+            if (newX < 0 || newX >= COL || newY >= ROW) {
                 return true;
             }
-            if (newY < 0){
+
+            if (newY < 0) {
                 continue;
             }
-            if (board[newY][newX] !== VACANT){
+
+            if (board[newY][newX] !== VACANT) {
                 return true;
             }
         }
@@ -200,37 +194,35 @@ Piece.prototype.collision = function (x, y, piece) {
     return false;
 };
 
-function autoDrop() {
+function drop() {
     let now = Date.now();
     let delta = now - dropStartTime;
-    
-    if (delta > DROP_INTERVAL){
+    if (delta > DROP_INTERVAL) {
         piece.moveDown();
         dropStartTime = Date.now();
     }
-
-    if (!isGameOverFlag){
-        requestAnimationFrame(autoDrop);
+    if (!isGameOver) {
+        requestAnimationFrame(drop);
     }
 }
 
-function startGame() {
-    drawBoard();
-    dropIntervalId = setInterval(autoDrop, DROP_INTERVAL);
-}
-
 function gameOver() {
-    isGameOverFlag = true;
-    clearInterval(dropIntervalId);
+    isGameOver = true;
     alert("Game Over");
 }
 
-function restartGame() {
-    board = Array.from({ length: ROW }, () => Array(COL).fill(VACANT));
-    piece = randomPiece();
-    score = 0;
-    isGameOverFlag = false;
-    startGame();
+function draw() {
+    drawBoard();
+    piece.draw();
 }
 
-startGame();
+function gameLoop() {
+    if (!isGameOver) {
+        draw();
+        drop();
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+drawBoard();
+gameLoop();
